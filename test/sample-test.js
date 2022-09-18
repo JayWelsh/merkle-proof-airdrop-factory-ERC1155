@@ -33,7 +33,7 @@ describe("MerkleProofAirdropFactory", function () {
   let lastWhitelistContractAddress;
   beforeEach(async function () {
 
-    [deployerAddress, miscAddress, whitelistAddress1, whitelistAddress2, ...signerAddresses] = await hre.ethers.getSigners();
+    [deployerAddress, miscAddress, payoutAddress, whitelistAddress1, whitelistAddress2, ...signerAddresses] = await hre.ethers.getSigners();
 
     testWhitelist[whitelistAddress1.address] = 5;
     testWhitelist[whitelistAddress2.address] = 10;
@@ -71,7 +71,9 @@ describe("MerkleProofAirdropFactory", function () {
       referenceClonableERC1155.address, // address _tokenContract,
       1, // uint256 _tokenId,
       Math.floor(new Date().getTime() / 1000), // uint256 _startTime,
-      Math.floor(new Date().getTime() / 1000) // uint256 _endTime
+      Math.floor(new Date().getTime() / 1000), // uint256 _endTime
+      deployerAddress.address,
+      payoutAddress.address,
     );
 
     // Additional Reference ClonableMerkleAirdropMinimalERC1155
@@ -81,7 +83,9 @@ describe("MerkleProofAirdropFactory", function () {
       referenceClonableERC1155.address, // address _tokenContract,
       1, // uint256 _tokenId,
       Math.floor(new Date().getTime() / 1000), // uint256 _startTime,
-      Math.floor(new Date().getTime() / 1000) // uint256 _endTime
+      Math.floor(new Date().getTime() / 1000), // uint256 _endTime
+      deployerAddress.address,
+      payoutAddress.address
     );
 
     // Reference ClonableMerkleWhitelist
@@ -129,7 +133,8 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       )).to.emit(merkleProofAirdropFactory, "NewMerkle1155AirdropClone");
     });
   });
@@ -146,13 +151,14 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       );
 
       let txWithNewTokenResponse = await txWithNewToken.wait();
 
-      let eventNewERC1155Clone = txWithNewTokenResponse.events[3];
-      let eventNewMerkle1155AirdropCloneFirst = txWithNewTokenResponse.events[4];
+      let eventNewERC1155Clone = txWithNewTokenResponse.events.find((item) => item.event === 'NewERC1155Clone');
+      let eventNewMerkle1155AirdropCloneFirst = txWithNewTokenResponse.events.find((item) => item.event === 'NewMerkle1155AirdropClone');
 
       lastERC1155ContractAddress = eventNewERC1155Clone.args.erc1155Clone;
       lastAirdropContractAddress = eventNewMerkle1155AirdropCloneFirst.args.airdropClone;
@@ -190,12 +196,15 @@ describe("MerkleProofAirdropFactory", function () {
         Math.floor(new Date().getTime() / 1000), // uint256 _startTime,
         0,
         lastERC1155ContractAddress,
-        2
+        2,
+        'ipfs://',
+        deployerAddress.address,
+        payoutAddress.address
       );
 
       let txResponse = await tx.wait();
 
-      let eventNewMerkle1155AirdropClone = txResponse.events[1];
+      let eventNewMerkle1155AirdropClone = txResponse.events.find((item) => item.event === 'NewMerkle1155AirdropClone');
 
       lastAirdropContractAddress = eventNewMerkle1155AirdropClone.args.airdropClone;
 
@@ -230,13 +239,14 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       );
 
       let txWithNewTokenResponse = await txWithNewToken.wait();
 
-      let eventNewERC1155Clone = txWithNewTokenResponse.events[3];
-      let eventNewMerkle1155AirdropCloneFirst = txWithNewTokenResponse.events[4];
+      let eventNewERC1155Clone = txWithNewTokenResponse.events.find((item) => item.event === 'NewERC1155Clone');
+      let eventNewMerkle1155AirdropCloneFirst = txWithNewTokenResponse.events.find((item) => item.event === 'NewMerkle1155AirdropClone');
 
       lastERC1155ContractAddress = eventNewERC1155Clone.args.erc1155Clone;
       lastAirdropContractAddress = eventNewMerkle1155AirdropCloneFirst.args.airdropClone;
@@ -267,7 +277,10 @@ describe("MerkleProofAirdropFactory", function () {
         Math.floor(new Date().getTime() / 1000), // uint256 _startTime,
         0,
         lastERC1155ContractAddress,
-        2
+        2,
+        'ipfs://',
+        deployerAddress.address,
+        payoutAddress.address
       )).to.be.revertedWith("INVALID_AIRDROP_REFERENCE_CONTRACT");
 
     });
@@ -283,13 +296,14 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       );
 
       let txWithNewTokenResponse = await txWithNewToken.wait();
 
-      let eventNewERC1155Clone = txWithNewTokenResponse.events[3];
-      let eventNewMerkle1155AirdropCloneFirst = txWithNewTokenResponse.events[4];
+      let eventNewERC1155Clone = txWithNewTokenResponse.events.find((item) => item.event === 'NewERC1155Clone');
+      let eventNewMerkle1155AirdropCloneFirst = txWithNewTokenResponse.events.find((item) => item.event === 'NewMerkle1155AirdropClone');
 
       lastERC1155ContractAddress = eventNewERC1155Clone.args.erc1155Clone;
       lastAirdropContractAddress = eventNewMerkle1155AirdropCloneFirst.args.airdropClone;
@@ -320,7 +334,10 @@ describe("MerkleProofAirdropFactory", function () {
         Math.floor(new Date().getTime() / 1000), // uint256 _startTime,
         0,
         lastERC1155ContractAddress,
-        2
+        2,
+        'ipfs://',
+        deployerAddress.address,
+        payoutAddress.address
       )).to.be.revertedWith("INVALID_WHITELIST_REFERENCE_CONTRACT");
 
     });
@@ -338,13 +355,14 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       );
 
       let txWithNewTokenResponse = await txWithNewToken.wait();
 
-      let eventNewERC1155Clone = txWithNewTokenResponse.events[3];
-      let eventNewMerkle1155AirdropCloneFirst = txWithNewTokenResponse.events[4];
+      let eventNewERC1155Clone = txWithNewTokenResponse.events.find((item) => item.event === 'NewERC1155Clone');
+      let eventNewMerkle1155AirdropCloneFirst = txWithNewTokenResponse.events.find((item) => item.event === 'NewMerkle1155AirdropClone');
 
       lastERC1155ContractAddress = eventNewERC1155Clone.args.erc1155Clone;
       lastAirdropContractAddress = eventNewMerkle1155AirdropCloneFirst.args.airdropClone;
@@ -382,11 +400,13 @@ describe("MerkleProofAirdropFactory", function () {
         2,
         Math.floor(new Date().getTime() / 1000), // uint256 _startTime,
         0,
+        deployerAddress.address,
+        payoutAddress.address
       );
 
       let txResponse = await tx.wait();
 
-      let eventNewMerkle1155AirdropClone = txResponse.events[0];
+      let eventNewMerkle1155AirdropClone = txResponse.events.find((item) => item.event === 'NewMerkle1155AirdropClone');
 
       lastAirdropContractAddress = eventNewMerkle1155AirdropClone.args.airdropClone;
 
@@ -420,13 +440,14 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       );
 
       let txWithNewTokenResponse = await txWithNewToken.wait();
 
-      let eventNewERC1155Clone = txWithNewTokenResponse.events[3];
-      let eventNewMerkle1155AirdropCloneFirst = txWithNewTokenResponse.events[4];
+      let eventNewERC1155Clone = txWithNewTokenResponse.events.find((item) => item.event === 'NewERC1155Clone');
+      let eventNewMerkle1155AirdropCloneFirst = txWithNewTokenResponse.events.find((item) => item.event === 'NewMerkle1155AirdropClone');
 
       lastERC1155ContractAddress = eventNewERC1155Clone.args.erc1155Clone;
       lastAirdropContractAddress = eventNewMerkle1155AirdropCloneFirst.args.airdropClone;
@@ -464,8 +485,81 @@ describe("MerkleProofAirdropFactory", function () {
         2,
         Math.floor(new Date().getTime() / 1000), // uint256 _startTime,
         0,
+        deployerAddress.address,
+        payoutAddress.address
       )).to.be.revertedWith("INVALID_AIRDROP_REFERENCE_CONTRACT");
     });
+    it("Should should set the provided admin address as the owner of the airdrop contract", async function () {
+      let txWithNewToken = await merkleProofAirdropFactory.newMerkleAirdropAndWhitelistAndERC1155(
+        referenceClonableMerkleAirdropMinimalERC1155.address,
+        referenceClonableMerkleWhitelist.address,
+        referenceClonableERC1155.address,
+        merkleRoot,
+        Math.floor(new Date().getTime() / 1000), // uint256 _startTime,
+        0,
+        'Testoken', //   string memory _tokenName,
+        'TEST', //   string memory _tokenSymbol,
+        'ipfs://',
+        deployerAddress.address,
+        payoutAddress.address
+      );
+
+      let txWithNewTokenResponse = await txWithNewToken.wait();
+
+      let eventNewERC1155Clone = txWithNewTokenResponse.events.find((item) => item.event === 'NewERC1155Clone');
+      let eventNewMerkle1155AirdropCloneFirst = txWithNewTokenResponse.events.find((item) => item.event === 'NewMerkle1155AirdropClone');
+
+      lastERC1155ContractAddress = eventNewERC1155Clone.args.erc1155Clone;
+      lastAirdropContractAddress = eventNewMerkle1155AirdropCloneFirst.args.airdropClone;
+      lastWhitelistContractAddress = eventNewMerkle1155AirdropCloneFirst.args.merkleProofWhitelist;
+
+      const NewAirdropFirst = await ethers.getContractFactory("ClonableMerkleAirdropMinimalERC1155");
+      let newAirdropFirst = await NewAirdropFirst.attach(lastAirdropContractAddress);
+
+      let merkleProofFirst = await merkleTreeGenerateProof(testWhitelist, whitelistAddress1.address, testWhitelist[whitelistAddress1.address]);
+
+      let mintTxFirst = await newAirdropFirst.mintMerkleWhitelist(
+        merkleProofFirst,
+        testWhitelist[whitelistAddress1.address],
+        whitelistAddress1.address,
+        whitelistAddress1.address
+      );
+
+      mintTxResponse = await mintTxFirst.wait();
+
+      const ClonableERC1155First = await ethers.getContractFactory("ClonableERC1155");
+      const clonableERC1155First = await ClonableERC1155First.attach(lastERC1155ContractAddress);
+
+      await expect(await clonableERC1155First.balanceOf(whitelistAddress1.address, 1)).to.equal(testWhitelist[whitelistAddress1.address]);
+
+      // address _airdropReferenceContract,
+      // address _whitelistContract,
+      // address _tokenContract,
+      // uint256 _tokenId,
+      // uint256 _startTime,
+      // uint256 _endTime
+      let tx = await merkleProofAirdropFactory.newMerkleAirdrop(
+        referenceClonableMerkleAirdropMinimalERC1155.address,
+        lastWhitelistContractAddress,
+        lastERC1155ContractAddress,
+        2,
+        Math.floor(new Date().getTime() / 1000), // uint256 _startTime,
+        0,
+        deployerAddress.address,
+        payoutAddress.address
+      );
+
+      let txResponse = await tx.wait();
+
+      let eventNewMerkle1155AirdropClone = txResponse.events.find((item) => item.event === 'NewMerkle1155AirdropClone');
+
+      lastAirdropContractAddress = eventNewMerkle1155AirdropClone.args.airdropClone;
+
+      const NewAirdrop = await ethers.getContractFactory("ClonableMerkleAirdropMinimalERC1155");
+      let newAirdrop = await NewAirdrop.attach(lastAirdropContractAddress);
+
+      expect(await newAirdrop.owner()).to.equal(deployerAddress.address);
+    })
   });
   context("function newMerkleWhitelist", async function () {
     it("Should allow an new merkle whitelist to be deployed", async function () {
@@ -510,6 +604,28 @@ describe("MerkleProofAirdropFactory", function () {
       )).to.be.revertedWith("INVALID_ERC1155_REFERENCE_CONTRACT");
       
     });
+    it("Should set the supplied admin address as the owner of the new ERC1155 contract", async function () {
+
+      let tx = await merkleProofAirdropFactory.newERC1155(
+        referenceClonableERC1155.address,
+        'Testoken', //   string memory _tokenName,
+        'TEST', //   string memory _tokenSymbol,
+        'ipfs://',
+        deployerAddress.address,
+        deployerAddress.address
+      );
+
+      let txResponse = await tx.wait();
+
+      let eventNewMerkleERC1155 = txResponse.events.find((item) => item.event === 'NewERC1155Clone');
+
+      const ClonableERC1155 = await ethers.getContractFactory("ClonableERC1155");
+
+      let newERC1155 = await ClonableERC1155.attach(eventNewMerkleERC1155.args.erc1155Clone);
+      
+      expect(await newERC1155.owner()).to.equal(deployerAddress.address);
+      
+    });
   });
   context("function mintMerkleWhitelist", async function () {
     it("Should subsequently allow whitelisted claimants to mint their allocation of the token", async function () {
@@ -524,13 +640,14 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       );
 
       let txResponse = await tx.wait();
 
-      let eventNewERC1155Clone = txResponse.events[3];
-      let eventNewMerkle1155AirdropClone = txResponse.events[4];
+      let eventNewERC1155Clone = txResponse.events.find((item) => item.event === 'NewERC1155Clone');
+      let eventNewMerkle1155AirdropClone = txResponse.events.find((item) => item.event === 'NewMerkle1155AirdropClone');
 
       lastERC1155ContractAddress = eventNewERC1155Clone.args.erc1155Clone;
       lastAirdropContractAddress = eventNewMerkle1155AirdropClone.args.airdropClone;
@@ -567,13 +684,14 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       );
 
       let txResponse = await tx.wait();
 
-      let eventNewERC1155Clone = txResponse.events[3];
-      let eventNewMerkle1155AirdropClone = txResponse.events[4];
+      let eventNewERC1155Clone = txResponse.events.find((item) => item.event === 'NewERC1155Clone');
+      let eventNewMerkle1155AirdropClone = txResponse.events.find((item) => item.event === 'NewMerkle1155AirdropClone');
 
       lastERC1155ContractAddress = eventNewERC1155Clone.args.erc1155Clone;
       lastAirdropContractAddress = eventNewMerkle1155AirdropClone.args.airdropClone;
@@ -631,13 +749,14 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       );
 
       let txResponse = await tx.wait();
 
-      let eventNewERC1155Clone = txResponse.events[3];
-      let eventNewMerkle1155AirdropClone = txResponse.events[4];
+      let eventNewERC1155Clone = txResponse.events.find((item) => item.event === 'NewERC1155Clone');
+      let eventNewMerkle1155AirdropClone = txResponse.events.find((item) => item.event === 'NewMerkle1155AirdropClone');
 
       lastERC1155ContractAddress = eventNewERC1155Clone.args.erc1155Clone;
       lastAirdropContractAddress = eventNewMerkle1155AirdropClone.args.airdropClone;
@@ -681,13 +800,14 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       );
 
       let txResponse = await tx.wait();
 
-      let eventNewERC1155Clone = txResponse.events[3];
-      let eventNewMerkle1155AirdropClone = txResponse.events[4];
+      let eventNewERC1155Clone = txResponse.events.find((item) => item.event === 'NewERC1155Clone');
+      let eventNewMerkle1155AirdropClone = txResponse.events.find((item) => item.event === 'NewMerkle1155AirdropClone');
 
       lastERC1155ContractAddress = eventNewERC1155Clone.args.erc1155Clone;
       lastAirdropContractAddress = eventNewMerkle1155AirdropClone.args.airdropClone;
@@ -719,7 +839,8 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       )).to.be.revertedWith("INVALID_AIRDROP_REFERENCE_CONTRACT");
 
       await merkleProofAirdropFactory.setClonableAirdropReferenceValidity(additionalReferenceClonableMerkleAirdropMinimalERC1155.address, true);
@@ -734,7 +855,8 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       )).to.emit(merkleProofAirdropFactory, "NewMerkle1155AirdropClone");
 
       await merkleProofAirdropFactory.setClonableAirdropReferenceValidity(additionalReferenceClonableMerkleAirdropMinimalERC1155.address, false);
@@ -749,7 +871,8 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       )).to.be.revertedWith("INVALID_AIRDROP_REFERENCE_CONTRACT");
     });
   });
@@ -766,7 +889,8 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       )).to.be.revertedWith("INVALID_WHITELIST_REFERENCE_CONTRACT");
 
       await merkleProofAirdropFactory.setClonableWhitelistReferenceValidity(additionalReferenceClonableMerkleWhitelist.address, true);
@@ -781,7 +905,8 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       )).to.emit(merkleProofAirdropFactory, "NewMerkle1155AirdropClone");
 
       await merkleProofAirdropFactory.setClonableWhitelistReferenceValidity(additionalReferenceClonableMerkleWhitelist.address, false);
@@ -796,7 +921,8 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       )).to.be.revertedWith("INVALID_WHITELIST_REFERENCE_CONTRACT");
     });
   });
@@ -812,7 +938,8 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       )).to.be.revertedWith("INVALID_ERC1155_REFERENCE_CONTRACT");
 
       await merkleProofAirdropFactory.setClonableERC1155ReferenceValidity(additionalReferenceClonableERC1155.address, true);
@@ -827,7 +954,8 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       )).to.emit(merkleProofAirdropFactory, "NewMerkle1155AirdropClone");
 
       await merkleProofAirdropFactory.setClonableERC1155ReferenceValidity(additionalReferenceClonableERC1155.address, false);
@@ -842,7 +970,8 @@ describe("MerkleProofAirdropFactory", function () {
         'Testoken', //   string memory _tokenName,
         'TEST', //   string memory _tokenSymbol,
         'ipfs://',
-        deployerAddress.address
+        deployerAddress.address,
+        payoutAddress.address
       )).to.be.revertedWith("INVALID_ERC1155_REFERENCE_CONTRACT");
     });
   });

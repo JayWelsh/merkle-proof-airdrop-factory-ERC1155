@@ -29,18 +29,18 @@ module.exports = {
         count: 20, // Adjust the number of accounts available when using the local Hardhat network
       }
     },
-    // mainnet: {
-    //   url: process.env.GOERLI_RPC_URL,
-    //   accounts: [process.env.DEPLOYMENT_ADDRESS_PRIVATE_KEY] // Private Key
-    // },
-    // goerli: {
-    //   url: process.env.GOERLI_RPC_URL,
-    //   accounts: [process.env.DEPLOYMENT_ADDRESS_PRIVATE_KEY] // Private Key
-    // },
-    // rinkeby: {
-    //   url: process.env.RINKEBY_RPC_URL,
-    //   accounts: [process.env.DEPLOYMENT_ADDRESS_PRIVATE_KEY] // Private Key
-    // },
+    mainnet: {
+      url: process.env.MAINNET_RPC_URL,
+      accounts: [process.env.DEPLOYMENT_ADDRESS_PRIVATE_KEY] // Private Key
+    },
+    goerli: {
+      url: process.env.GOERLI_RPC_URL,
+      accounts: [process.env.DEPLOYMENT_ADDRESS_PRIVATE_KEY] // Private Key
+    },
+    rinkeby: {
+      url: process.env.RINKEBY_RPC_URL,
+      accounts: [process.env.DEPLOYMENT_ADDRESS_PRIVATE_KEY] // Private Key
+    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY

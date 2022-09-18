@@ -3,10 +3,11 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "../interfaces/IERC2981.sol";
 
-contract ClonableERC1155 is ERC1155Upgradeable, AccessControlUpgradeable {
+contract ClonableERC1155 is ERC1155Upgradeable, AccessControlUpgradeable, OwnableUpgradeable {
 
     mapping(uint256 => string) public tokenIdToURI;
     string public name;
@@ -30,6 +31,7 @@ contract ClonableERC1155 is ERC1155Upgradeable, AccessControlUpgradeable {
       _grantRole(DEFAULT_ADMIN_ROLE, _factory);
       _setupRole(MINTER_ROLE, _minter);
       _setURI(_tokenURI);
+      _transferOwnership(_admin);
     }
 
     // We signify support for ERC2981, ERC1155, ERC1155MetadataURI & AccessControlUpgradeable
@@ -47,7 +49,7 @@ contract ClonableERC1155 is ERC1155Upgradeable, AccessControlUpgradeable {
     }
 
     function uri(uint256 _tokenId) public view override returns (string memory) {
-        return tokenIdToURI[_tokenId];
+      return tokenIdToURI[_tokenId];
     }
 
     function setTokenURI(uint256 _tokenId, string memory _tokenURI) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -65,14 +67,14 @@ contract ClonableERC1155 is ERC1155Upgradeable, AccessControlUpgradeable {
     }
 
     function updateRoyaltyInfo(address _royaltyReceiver, uint16 _royaltyBasisPoints) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        royaltyReceiver = _royaltyReceiver;
-        royaltyBasisPoints = _royaltyBasisPoints;
+      royaltyReceiver = _royaltyReceiver;
+      royaltyBasisPoints = _royaltyBasisPoints;
     }
 
     // Takes a _tokenId and _price (in wei) and returns the royalty receiver's address and how much of a royalty the royalty receiver is owed
     function royaltyInfo(uint256 _tokenId, uint256 _price) external view returns (address receiver, uint256 royaltyAmount) {
-        receiver = royaltyReceiver;
-        royaltyAmount = getPercentageOf(_price, royaltyBasisPoints);
+      receiver = royaltyReceiver;
+      royaltyAmount = getPercentageOf(_price, royaltyBasisPoints);
     }
 
 }

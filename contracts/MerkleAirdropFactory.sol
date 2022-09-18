@@ -15,7 +15,9 @@ interface IClonableAirdropMinimal1155Reference {
     address tokenContract,
     uint256 tokenId,
     uint256 startTime,
-    uint256 endTime
+    uint256 endTime,
+    address admin,
+    address payout
   ) external;
 }
 
@@ -32,6 +34,13 @@ interface IClonableERC1155Reference {
         bytes32 role,
         address account
     ) external;
+    function setTokenURI(
+        uint256 _tokenId,
+        string memory _tokenURI
+    ) external;
+    function tokenIdToURI(
+        uint256 _tokenId
+    ) external returns (string memory);
 }
 
 contract MerkleProofAirdropFactory is Ownable {
@@ -99,7 +108,9 @@ contract MerkleProofAirdropFactory is Ownable {
         address _tokenContract,
         uint256 _tokenId,
         uint256 _startTime,
-        uint256 _endTime
+        uint256 _endTime,
+        address _admin,
+        address _payout
     ) external onlyOwner {
         require(validClonableAirdropReferences[_airdropReferenceContract], "INVALID_AIRDROP_REFERENCE_CONTRACT");
         _airdropIds.increment();
@@ -107,7 +118,7 @@ contract MerkleProofAirdropFactory is Ownable {
         // Deploy new airdrop contract
         address newAirdropCloneAddress = Clones.clone(_airdropReferenceContract);
         IClonableAirdropMinimal1155Reference newAirdropClone = IClonableAirdropMinimal1155Reference(newAirdropCloneAddress);
-        newAirdropClone.initialize(_whitelistContract, _tokenContract, _tokenId, _startTime, _endTime);
+        newAirdropClone.initialize(_whitelistContract, _tokenContract, _tokenId, _startTime, _endTime, _admin, _payout);
         emit NewMerkle1155AirdropClone(newAirdropId, _airdropReferenceContract, newAirdropCloneAddress, _whitelistContract, _startTime, _endTime);
         // Set the airdrop contract as a minter of the NFT contract
         IClonableERC1155Reference existingERC1155Clone = IClonableERC1155Reference(_tokenContract);
@@ -156,25 +167,28 @@ contract MerkleProofAirdropFactory is Ownable {
         uint256 _startTime,
         uint256 _endTime,
         address _tokenContract,
-        uint256 _tokenId
+        uint256 _tokenId,
+        string memory _tokenURI,
+        address _admin,
+        address _payout
     ) external onlyOwner {
         require(validClonableAirdropReferences[_airdropReferenceContract], "INVALID_AIRDROP_REFERENCE_CONTRACT");
         require(validClonableWhitelistReferences[_whitelistReferenceContract], "INVALID_WHITELIST_REFERENCE_CONTRACT");
         _airdropIds.increment();
         uint256 newAirdropId = _airdropIds.current();
         // Deploy new whitelist contract
-        address newWhitelistCloneAddress = Clones.clone(_whitelistReferenceContract);
-        IClonableWhitelistReference newWhitelistClone = IClonableWhitelistReference(newWhitelistCloneAddress);
-        newWhitelistClone.initialize(_merkleRoot);
-        emit NewMerkleWhitelistClone(_whitelistReferenceContract, newWhitelistCloneAddress);
+        address newWhitelistCloneAddress = cloneAndInitWhitelist(_whitelistReferenceContract, _merkleRoot);
         // Deploy new airdrop contract
         address newAirdropCloneAddress = Clones.clone(_airdropReferenceContract);
-        IClonableAirdropMinimal1155Reference newAirdropClone = IClonableAirdropMinimal1155Reference(newAirdropCloneAddress);
-        newAirdropClone.initialize(newWhitelistCloneAddress, _tokenContract, _tokenId, _startTime, _endTime);
+        initAirdropClone(newAirdropCloneAddress, newWhitelistCloneAddress, _tokenContract, _tokenId, _startTime, _endTime, _admin, _payout);
         emit NewMerkle1155AirdropClone(newAirdropId, _airdropReferenceContract, newAirdropCloneAddress, newWhitelistCloneAddress, _startTime, _endTime);
         // Set the airdrop contract as a minter of the NFT contract
         IClonableERC1155Reference existingERC1155Clone = IClonableERC1155Reference(_tokenContract);
         existingERC1155Clone.grantRole(MINTER_ROLE, newAirdropCloneAddress);
+        // Set the tokenURI of the new token ID if there isn't one set already
+        if(keccak256(bytes(existingERC1155Clone.tokenIdToURI(_tokenId))) == keccak256(bytes(""))) {
+            existingERC1155Clone.setTokenURI(_tokenId, _tokenURI);
+        }
     }
 
     function newMerkleAirdropAndWhitelistAndERC1155(
@@ -187,7 +201,8 @@ contract MerkleProofAirdropFactory is Ownable {
         string memory _tokenName,
         string memory _tokenSymbol,
         string memory _tokenURI,
-        address _tokenAdmin
+        address _airdropAdminAndTempTokenAdmin,
+        address _payout
     ) external onlyOwner {
         require(validClonableAirdropReferences[_airdropReferenceContract], "INVALID_AIRDROP_REFERENCE_CONTRACT");
         _airdropIds.increment();
@@ -202,11 +217,11 @@ contract MerkleProofAirdropFactory is Ownable {
             _tokenName,
             _tokenSymbol,
             _tokenURI,
-            _tokenAdmin,
+            _airdropAdminAndTempTokenAdmin,
             newAirdropCloneAddress
         );
         // Initialize new airdrop contract
-        initAirdropClone(newAirdropCloneAddress, newWhitelistCloneAddress, newERC1155CloneAddress, 1, _startTime, _endTime);
+        initAirdropClone(newAirdropCloneAddress, newWhitelistCloneAddress, newERC1155CloneAddress, 1, _startTime, _endTime, _airdropAdminAndTempTokenAdmin, _payout);
         emit NewMerkle1155AirdropClone(newAirdropId, _airdropReferenceContract, newAirdropCloneAddress, newWhitelistCloneAddress, _startTime, _endTime);
     }
 
@@ -242,10 +257,12 @@ contract MerkleProofAirdropFactory is Ownable {
         address _tokenContract,
         uint256 _tokenId,
         uint256 _startTime,
-        uint256 _endTime
+        uint256 _endTime,
+        address _admin,
+        address _payout
     ) internal {
         IClonableAirdropMinimal1155Reference newAirdropClone = IClonableAirdropMinimal1155Reference(_clone);
-        newAirdropClone.initialize(_merkleProofWhitelist, _tokenContract, _tokenId, _startTime, _endTime);
+        newAirdropClone.initialize(_merkleProofWhitelist, _tokenContract, _tokenId, _startTime, _endTime, _admin, _payout);
     }
 
     function cloneAndInitWhitelist(
@@ -258,6 +275,7 @@ contract MerkleProofAirdropFactory is Ownable {
         // Initialize new whitelist contract
         IClonableWhitelistReference newWhitelistClone = IClonableWhitelistReference(newWhitelistCloneAddress);
         newWhitelistClone.initialize(_merkleRoot);
+        emit NewMerkleWhitelistClone(_whitelistReferenceContract, newWhitelistCloneAddress);
         return newWhitelistCloneAddress;
     }
 
